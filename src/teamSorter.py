@@ -1,5 +1,7 @@
 import json
+import os
 import pgeocode
+from pathlib import Path
 import pandas as pd
 import urllib.request
 
@@ -18,6 +20,7 @@ def getNumEvents():
     return numEvents
 
 def importTeams():
+    print("Fetching team data from FIRST API")
     r = urllib.request.urlopen(FIRST_WA_TEAMS_URL.format(numTeams = getNumTeams()) + FIRST_WA_TEAMS_POSTFIX)
     completeTeamData = json.loads(r.read().decode('utf-8')).get("hits").get("hits")
     teamsToSort = {}
@@ -27,15 +30,23 @@ def importTeams():
     return teamsToSort
 
 def importEvents():
+    print("Fetching event data from FIRST API")
     r = urllib.request.urlopen(FIRST_WA_EVENTS_URL.format(numEvents = getNumEvents()) + FIRST_WA_EVENTS_POSTFIX)
     completeEventData = json.loads(r.read().decode('utf-8')).get("hits").get("hits")
     eventsToSort = {}
     for event in completeEventData:
         eventData = event.get("_source")
+        eventName = eventData.get("event_name")
         if (eventData.get("event_subtype") == QUALIFYING_EVENT_SUBTYPE):
             if CUSTOM_CAPACITY_TYPE not in event.keys():
                 eventData["event_capacity"] = DEFAULT_CAPACITY
-            eventsToSort[eventData.get("event_name")] = eventData
+            for dateName in WEEKEND_DAYS:
+                eventName = eventName.replace(dateName, '')
+            if eventName in eventsToSort:
+                eventsToSort[eventName]["event_capacity"] += eventData["event_capacity"]
+            else:
+                eventData["event_name"] = eventName
+                eventsToSort[eventName] = eventData
     return eventsToSort
 
 def findDistance(team, eventsAvailable):
@@ -56,8 +67,7 @@ def parseTeams(eventsAvailable):
         teamsWithEventDistances[team] = dict(sorted(findDistance(teamsToSort.get(team), eventsAvailable).items(), key=lambda item: item[1]))
         print("Team: ",  "{:<5}".format(team), " | ", number, " out of: ", len(teamsToSort.keys()))
         number += 1
-    df = pd.DataFrame.from_dict(teamsWithEventDistances, orient='index')
-    df.to_csv(TEAMS_WITH_DISTANCES_FILE)
+    convertDictToFile(teamsWithEventDistances, TEAMS_WITH_DISTANCES_FILE)
     return teamsWithEventDistances
 
 def sortTeams(teamsWithEventDistances, eventsAvailable):
@@ -76,6 +86,7 @@ def sortTeams(teamsWithEventDistances, eventsAvailable):
                 print("Assigning: ", "{:<5}".format(team), " to ", event , "at distance", "{:.2f}".format(teamsWithEventDistances.get(team).get(event)))
                 break
             else:
+                print("Failed to assign: ", "{:<5}".format(team), " to full event: ", event)
                 isClosestEvent = False
         if not isClosestEvent:
             nthClosestEvent = list(teamsWithEventDistances.get(team).keys()).index(event) + 1
@@ -89,11 +100,16 @@ def sortTeams(teamsWithEventDistances, eventsAvailable):
     print("Furthest assigned team is: ", furthestDistance[0], " with distance: ", furthestDistance[1], "and event: ", furthestDistance[2])
     return eventsWithTeamList
 
+def convertDictToFile(inputDict, path):
+    if not os.path.exists(GENERATED_FILE_PATH_ROOT):
+        os.makedirs(GENERATED_FILE_PATH_ROOT)
+    df = pd.DataFrame.from_dict(inputDict, orient='index')
+    df.to_csv(GENERATED_FILE_PATH_ROOT+path)
+
+    
 def main():
     eventsAvailable = importEvents()
     teamsWithEventDistances = parseTeams(eventsAvailable)
     eventsWithTeamList = sortTeams(teamsWithEventDistances, eventsAvailable)
-    df = pd.DataFrame.from_dict(eventsWithTeamList, orient='index')
-    df.to_csv('eventsWithTeamList.csv')
-
+    convertDictToFile(eventsWithTeamList, GENERATED_LIST_FILE)
 main()

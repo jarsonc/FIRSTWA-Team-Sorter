@@ -1,2 +1,7 @@
+# Bulk removing all generated files to avoid publicly displaying generated assignments in public git repo
 *.csv
 ./generatedFiles/*
+# ftcKey file needed to pull from FTC API. Commenting out to avoid violating rules. Can provide on request
+src/ftcKeys.py
+# Removing generated caches
+*pycache*

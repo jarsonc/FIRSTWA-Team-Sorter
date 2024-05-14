@@ -4,4 +4,4 @@
 # ftcKey file needed to pull from FTC API. Commenting out to avoid violating rules. Can provide on request
 src/ftcKeys.py
 # Removing generated caches
-*pycache*
+__pycache__/

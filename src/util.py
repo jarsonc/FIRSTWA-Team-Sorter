@@ -10,14 +10,32 @@ def convertDictToFile(inputDict, path):
     df = pd.DataFrame.from_dict(inputDict, orient='index')
     df.to_csv(GENERATED_FILE_PATH_ROOT+path)
 
-def findDistance(team, eventsAvailable):
+def findDistanceByPostalCode(team, eventsAvailable):
     distanceUtility = pgeocode.GeoDistance('us')
-    teamPostalCode = team.get("team_postalcode")
+    teamPostalCode = team.get(TEAM_POSTAL_CODE_DATATYPE)
     eventsAndDistances = {}
     for event in eventsAvailable:
-        eventPostalCode = eventsAvailable.get(event).get("event_postalcode")
+        eventPostalCode = eventsAvailable.get(event).get(EVENT_POSTAL_CODE_DATATYPE)
         eventsAndDistances[event] = distanceUtility.query_postal_code(teamPostalCode, eventPostalCode)
     return eventsAndDistances
+
+def findPostalCodeByCity(importedData):
+    distanceUtility = pgeocode.Nominatim('us')
+    # Pulls first 5 cities with name from event in USA
+    postalCodeGuess = distanceUtility.query_location(importedData["city"], top_k=100)
+    if postalCodeGuess.empty:
+        return manuallyPromptForPostalCode(importedData)
+    else:
+        # Picks the first city in the state we're looking in, then converts to postal code (type str)
+        filteredPostalCode = postalCodeGuess[postalCodeGuess['state_code'] == STATE_ARG]
+        if not filteredPostalCode.size:
+            return manuallyPromptForPostalCode(importedData)
+        return filteredPostalCode["postal_code"].iloc[0]
+
+def manuallyPromptForPostalCode(importedData):
+    inputPrompt = "Post code for: {} not found. \nTeam data: {} \nManually enter a 5 digit zip here: ".format(importedData["city"], importedData)
+    inputPostalCode = input(inputPrompt)
+    return inputPostalCode
 
 def sortTeams(teamsWithEventDistances, eventsAvailable):
     eventsWithTeamList = {}

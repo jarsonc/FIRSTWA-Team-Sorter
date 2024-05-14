@@ -12,12 +12,9 @@ def main(programSelection):
         print("FRC not currently supported (and/or needed)")
         return
     elif programSelection is FTC:
-        print("Working on FTC too")
+        print("Working on FTC")
         eventsAvailable = importFTCEvents()
-        print(eventsAvailable)
-        teamsAvailable = importFTCTeams()
-        print(teamsAvailable)
-        return
+        teamsWithEventDistances = parseFTCTeams(eventsAvailable)
     eventsWithTeamList = sortTeams(teamsWithEventDistances, eventsAvailable)
     convertDictToFile(eventsWithTeamList, GENERATED_LIST_FILE)
 

@@ -4,11 +4,31 @@ import os
 import pandas as pd
 import pgeocode
 
-def convertDictToFile(inputDict, path):
-    if not os.path.exists(GENERATED_FILE_PATH_ROOT):
-        os.makedirs(GENERATED_FILE_PATH_ROOT)
+def convertDictToFile(inputDict, desiredFileName, programSelection):
+    filePath = GENERATED_FILE_PATH_ROOT + programSelection + "/"
+    if not os.path.exists(filePath):
+        os.makedirs(filePath)
     df = pd.DataFrame.from_dict(inputDict, orient='index')
-    df.to_csv(GENERATED_FILE_PATH_ROOT+path)
+    df.to_csv(filePath+desiredFileName)
+
+def checkAlreadySorted(programSelection):
+    eventFilePath = GENERATED_FILE_PATH_ROOT + programSelection + "/" + GENERATED_EVENT_FILE
+    teamFilePath = GENERATED_FILE_PATH_ROOT + programSelection + "/" + GENERATED_TEAMS_WITH_DISTANCES_FILE
+    if os.path.exists(eventFilePath) and os.path.exists(teamFilePath):
+        return True
+    return False
+
+def importExistingEventsFile(programSelection):
+    filePath = GENERATED_FILE_PATH_ROOT + programSelection + "/" + GENERATED_EVENT_FILE
+    df = pd.read_csv(filePath, index_col=0)
+    existingSort = df.to_dict('index')
+    return existingSort
+
+def importExistingTeamsFile(programSelection):
+    filePath = GENERATED_FILE_PATH_ROOT + programSelection + "/" + GENERATED_TEAMS_WITH_DISTANCES_FILE
+    df = pd.read_csv(filePath, index_col=0)
+    existingSort = df.to_dict('index')
+    return existingSort
 
 def findDistanceByPostalCode(team, eventsAvailable):
     distanceUtility = pgeocode.GeoDistance('us')

@@ -26,14 +26,14 @@ def importFLLTeams():
         teamsToSort[teamData.get("team_number_yearly")] = teamData
     return teamsToSort
 
-def importFLLEvents():
+def importFLLEvents(programSelection):
     print("Fetching event data from FIRST API")
     r = urllib.request.urlopen(FIRST_WA_EVENTS_URL.format(numEvents = getNumEvents()) + FIRST_WA_EVENTS_POSTFIX)
     completeEventData = json.loads(r.read().decode('utf-8')).get("hits").get("hits")
     eventsToSort = {}
     for event in completeEventData:
         eventData = event.get("_source")
-        eventName = eventData.get("event_name")
+        eventName = eventData.get("event_name").strip()
         if (eventData.get("event_subtype") == QUALIFYING_EVENT_SUBTYPE):
             if CUSTOM_CAPACITY_TYPE not in event.keys():
                 eventData["event_capacity"] = DEFAULT_CAPACITY
@@ -44,17 +44,22 @@ def importFLLEvents():
             else:
                 eventData["event_name"] = eventName
                 eventsToSort[eventName] = eventData
+    convertDictToFile(eventsToSort, GENERATED_EVENT_FILE, programSelection)
     return eventsToSort
 
-def parseFLLTeams(eventsAvailable):
+def parseFLLTeams(eventsAvailable, programSelection):
     teamsToSort = importFLLTeams()
-    print("Assigning ", len(teamsToSort), " to ", len(eventsAvailable), " events with ", len(eventsAvailable) * DEFAULT_CAPACITY, " spots")
+    totalSpots = 0
+    for event in eventsAvailable:
+        totalSpots += eventsAvailable.get(event).get(CUSTOM_CAPACITY_TYPE)
+    print("Assigning ", len(teamsToSort), " to ", len(eventsAvailable), " events with ", totalSpots, " spots")
+    if len(teamsToSort) > totalSpots:
+        raise Exception("Not enough event spots for teams")
     teamsWithEventDistances = {}
     number = 1
     for team in teamsToSort:
         teamsWithEventDistances[team] = dict(sorted(findDistanceByPostalCode(teamsToSort.get(team), eventsAvailable).items(), key=lambda item: item[1]))
         print("Team: ",  "{:<5}".format(team), " | ", number, " out of: ", len(teamsToSort.keys()))
         number += 1
-    convertDictToFile(teamsWithEventDistances, TEAMS_WITH_DISTANCES_FILE)
+    convertDictToFile(teamsWithEventDistances, GENERATED_TEAMS_WITH_DISTANCES_FILE, programSelection)
     return teamsWithEventDistances
-

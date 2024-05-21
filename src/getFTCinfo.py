@@ -45,7 +45,7 @@ def importFTCTeams():
         pageNum += 1
     return availableTeams
 
-def parseFTCTeams(eventsAvailable):
+def parseFTCTeams(eventsAvailable, programSelection):
     teamsToSort = importFTCTeams()
     print("Assigning ", len(teamsToSort), " to ", len(eventsAvailable), " events with ", len(eventsAvailable) * DEFAULT_CAPACITY, " spots")
     teamsWithEventDistances = {}
@@ -54,5 +54,5 @@ def parseFTCTeams(eventsAvailable):
         teamsWithEventDistances[team] = dict(sorted(findDistanceByPostalCode(teamsToSort.get(team), eventsAvailable).items(), key=lambda item: item[1]))
         print("Team: ",  "{:<5}".format(team), " | ", number, " out of: ", len(teamsToSort.keys()))
         number += 1
-    convertDictToFile(teamsWithEventDistances, TEAMS_WITH_DISTANCES_FILE)
+    convertDictToFile(teamsWithEventDistances, GENERATED_TEAMS_WITH_DISTANCES_FILE, programSelection)
     return teamsWithEventDistances

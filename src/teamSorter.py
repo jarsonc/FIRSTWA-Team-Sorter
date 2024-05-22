@@ -1,6 +1,6 @@
 from constants import *
 from getFLLInfo import *
-from getFTCinfo import *
+from getFTCInfo import *
 from util import *
 
 import sys

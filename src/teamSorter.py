@@ -29,14 +29,11 @@ def main(programSelection):
         teamsWithEventDistances = parseFTCTeams(eventsAvailable, programSelection)
     eventsWithTeamList = sortTeams(teamsWithEventDistances, eventsAvailable)
     convertDictToFile(eventsWithTeamList, GENERATED_LIST_FILE, programSelection)
+    print("Finished sorting and saving teams!")
 
 # FLL
-main(PROGRAM_TYPES[0])
+# main(PROGRAM_TYPES[0])
 # FRC
 # main(PROGRAM_TYPES[1])
 # FTC
-# main(PROGRAM_TYPES[2])
-
-def promptForRerun():
-    inputPrompt = "Existing team/event list found. Use existing data? (Y/N)"
-    return (input(inputPrompt).lower() == "y" or "yes")
+main(PROGRAM_TYPES[2])

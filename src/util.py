@@ -87,4 +87,7 @@ def sortTeams(teamsWithEventDistances, eventsAvailable):
     print("Furthest assigned team is: ", furthestDistance[0], " with distance: ", furthestDistance[1], "and event: ", furthestDistance[2])
     return eventsWithTeamList
 
+def promptForRerun():
+    inputPrompt = "Existing team/event list found. Use existing data? (Y/N)"
+    return (input(inputPrompt).lower() == "y" or "yes")
 

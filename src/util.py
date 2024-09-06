@@ -4,6 +4,8 @@ import os
 import pandas as pd
 import pgeocode
 
+from metrics import *
+
 def convertDictToFile(inputDict, desiredFileName, programSelection):
     filePath = GENERATED_FILE_PATH_ROOT + programSelection + "/"
     if not os.path.exists(filePath):
@@ -11,12 +13,19 @@ def convertDictToFile(inputDict, desiredFileName, programSelection):
     df = pd.DataFrame.from_dict(inputDict, orient='index')
     df.to_csv(filePath+desiredFileName)
 
-def checkAlreadySorted(programSelection):
+def checkDataExists(programSelection):
     eventFilePath = GENERATED_FILE_PATH_ROOT + programSelection + "/" + GENERATED_EVENT_FILE
     teamFilePath = GENERATED_FILE_PATH_ROOT + programSelection + "/" + GENERATED_TEAMS_WITH_DISTANCES_FILE
     if os.path.exists(eventFilePath) and os.path.exists(teamFilePath):
         return True
     return False
+
+def checkAlreadySorted(programSelection):
+    sortFilePath = GENERATED_FILE_PATH_ROOT + programSelection + "/" + GENERATED_LIST_FILE
+    if os.path.exists(sortFilePath):
+        return True
+    return False
+
 
 def importExistingEventsFile(programSelection):
     filePath = GENERATED_FILE_PATH_ROOT + programSelection + "/" + GENERATED_EVENT_FILE
@@ -62,8 +71,11 @@ def sortTeams(teamsWithEventDistances, eventsAvailable):
     closeness = {}
     furthestDistance = ()
     for team in teamsWithEventDistances:
-        isClosestEvent = True
-        for event in teamsWithEventDistances.get(team):
+        print(teamsWithEventDistances)
+        emptyPrompt()
+        closenessOfAssignment = 1
+        sortedEventList = dict(sorted(teamsWithEventDistances.get(team).items(), key=lambda item: item[1]))
+        for event in sortedEventList:
             if event not in eventsWithTeamList:
                 eventsWithTeamList[event] = [team]
                 print("Assigning: ", "{:<5}".format(team), " to ", event , "at distance", "{:.2f}".format(teamsWithEventDistances.get(team).get(event)))
@@ -74,20 +86,33 @@ def sortTeams(teamsWithEventDistances, eventsAvailable):
                 break
             else:
                 print("Failed to assign: ", "{:<5}".format(team), " to full event: ", event)
-                isClosestEvent = False
-        if not isClosestEvent:
-            nthClosestEvent = list(teamsWithEventDistances.get(team).keys()).index(event) + 1
-            closeness[team] = nthClosestEvent
+                closenessOfAssignment += 1
+        closeness[team] = closenessOfAssignment
+        if closenessOfAssignment == 1:
+            METRIC_DATA[FIRST_CHOICE_EVENT_TEAMS].append(team)
+        elif closenessOfAssignment == 2:
+            METRIC_DATA[SECOND_CHOICE_EVENT_TEAMS].append(team)
+        elif closenessOfAssignment >= 3 and teamsWithEventDistances.get(team).get(event) > DISTANCE_TO_FLAG:
+            METRIC_DATA[FLAGGED_TEAMS].append(team)
         else:
-            closeness[team] = 1
+            METRIC_DATA[WEIRD_TEAMS].append(team)
         if not bool(furthestDistance):
             furthestDistance = (team, teamsWithEventDistances.get(team).get(event), event)
         elif furthestDistance[1] < teamsWithEventDistances.get(team).get(event):
             furthestDistance = (team, teamsWithEventDistances.get(team).get(event), event)
     print("Furthest assigned team is: ", furthestDistance[0], " with distance: ", furthestDistance[1], "and event: ", furthestDistance[2])
+    METRIC_DATA[FURTHEST_DISTANCE_METRIC] =  (furthestDistance[0], furthestDistance[1])
     return eventsWithTeamList
 
 def promptForRerun():
     inputPrompt = "Existing team/event list found. Use existing data? (Y/N)"
-    return (input(inputPrompt).lower() == "y" or "yes")
+    return "y" in input(inputPrompt).lower()
+
+def promptForReSort():
+    inputPrompt = "Existing sort found. Re-allocate events? (Y/N) \n NOTE: This will override any existing sorts unless the file is backed up)"
+    return "y" in input(inputPrompt).lower()
+
+def emptyPrompt():
+    input("Press Enter to continue...")
+
 

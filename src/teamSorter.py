@@ -9,14 +9,17 @@ def main(programSelection):
     sys.tracebacklimit = 0
     if programSelection is FLL_CHALLENGE:
         print("Sorting FLL teams and events")
-        if checkAlreadySorted(programSelection):
+        if checkDataExists(programSelection):
             if promptForRerun():
                 print("Historical data exists, using existing data instead of reimport")
                 eventsAvailable = importExistingEventsFile(programSelection)
                 teamsWithEventDistances = importExistingTeamsFile(programSelection)
+                print(teamsWithEventDistances)
             else:
+                print("Scraping teams and events")
                 eventsAvailable = importFLLEvents(programSelection)
                 teamsWithEventDistances = parseFLLTeams(eventsAvailable, programSelection)
+                print(teamsWithEventDistances)
         else:
             eventsAvailable = importFLLEvents(programSelection)
             teamsWithEventDistances = parseFLLTeams(eventsAvailable, programSelection)
@@ -28,9 +31,13 @@ def main(programSelection):
         eventsAvailable = importFTCEvents()
         teamsWithEventDistances = parseFTCTeams(eventsAvailable, programSelection)
     eventsWithTeamList = sortTeams(teamsWithEventDistances, eventsAvailable)
-    convertDictToFile(eventsWithTeamList, GENERATED_LIST_FILE, programSelection)
-    print("Finished sorting and saving teams!")
-
+    if checkAlreadySorted(programSelection):
+        if promptForReSort():
+            convertDictToFile(eventsWithTeamList, GENERATED_LIST_FILE, programSelection)
+            print("Finished sorting and saving teams!")
+            print(printMetricData())
+        else:
+            print("No action taken. Original sort preserved")
 # FLL
 main(PROGRAM_TYPES[0])
 # FRC

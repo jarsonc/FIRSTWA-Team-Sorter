@@ -4,8 +4,8 @@ DEFAULT_TEAM = 9999999
 FURTHEST_DISTANCE_METRIC = "Team farthest away from their event: "
 FIRST_CHOICE_EVENT_TEAMS = "Teams assigned to closest event:"
 SECOND_CHOICE_EVENT_TEAMS = "Teams assigned to SECOND closest event:"
-FLAGGED_TEAMS = "Teams over 50 miles away from their assigned event:" #NOTE: This needs to be updated with the below variable
-DISTANCE_TO_FLAG = 50
+FLAGGED_TEAMS = "Teams over 120 miles away from their assigned event:" #NOTE: This needs to be updated with the below variable
+DISTANCE_TO_FLAG = 120
 
 WEIRD_TEAMS = "Teams that are assigned to their 3rd or greater event, but still in the 50 mile radius"
 

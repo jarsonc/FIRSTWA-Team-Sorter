@@ -14,12 +14,10 @@ def main(programSelection):
                 print("Historical data exists, using existing data instead of reimport")
                 eventsAvailable = importExistingEventsFile(programSelection)
                 teamsWithEventDistances = importExistingTeamsFile(programSelection)
-                print(teamsWithEventDistances)
             else:
                 print("Scraping teams and events")
                 eventsAvailable = importFLLEvents(programSelection)
                 teamsWithEventDistances = parseFLLTeams(eventsAvailable, programSelection)
-                print(teamsWithEventDistances)
         else:
             eventsAvailable = importFLLEvents(programSelection)
             teamsWithEventDistances = parseFLLTeams(eventsAvailable, programSelection)
@@ -30,7 +28,12 @@ def main(programSelection):
         print("Sorting FTC teams and events")
         eventsAvailable = importFTCEvents()
         teamsWithEventDistances = parseFTCTeams(eventsAvailable, programSelection)
+    oldSort(teamsWithEventDistances, eventsAvailable, programSelection)
+    
+def oldSort(teamsWithEventDistances, eventsAvailable, programSelection):
+    eventsWithSortedTeams = createEventKeysWithTeams(eventsAvailable, teamsWithEventDistances)
     eventsWithTeamList = sortTeams(teamsWithEventDistances, eventsAvailable)
+    
     if checkAlreadySorted(programSelection):
         if promptForReSort():
             convertDictToFile(eventsWithTeamList, GENERATED_LIST_FILE, programSelection)
@@ -38,6 +41,7 @@ def main(programSelection):
             print(printMetricData())
         else:
             print("No action taken. Original sort preserved")
+
 # FLL
 main(PROGRAM_TYPES[0])
 # FRC

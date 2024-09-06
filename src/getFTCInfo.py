@@ -1,12 +1,12 @@
 from constants import DEFAULT_CAPACITY, EVENT_POSTAL_CODE_DATATYPE, FTC_EVENTS_URL, FTC_TEAMS_URL, LEAGUE_TOURNAMENT_SUBTYPE, TEAM_POSTAL_CODE_DATATYPE, STATE_ARG
 from util import *
+from ftcKeys import USERNAME, PASSWORD
 
 import json
 import requests
 
 
 def importFTCEvents():
-    checkAuth()
     response = requests.get(FTC_EVENTS_URL.format(season=2023), auth=(USERNAME, PASSWORD))
     eventDataJson = json.loads(response.content.decode('utf-8'))
     completeEventData = eventDataJson["events"]
@@ -22,7 +22,6 @@ def importFTCEvents():
 
 
 def importFTCTeams():
-    checkAuth()
     response = requests.get(FTC_TEAMS_URL.format(season=2023), params={"state": STATE_ARG}, auth=(USERNAME, PASSWORD))
     teamBodyJson = json.loads(response.content.decode('utf-8'))
     numTeamsTotal = teamBodyJson["teamCountTotal"]
@@ -57,7 +56,3 @@ def parseFTCTeams(eventsAvailable, programSelection):
         number += 1
     convertDictToFile(teamsWithEventDistances, GENERATED_TEAMS_WITH_DISTANCES_FILE, programSelection)
     return teamsWithEventDistances
-
-def checkAuth():
-    if USERNAME not in globals() or PASSWORD not in globals():
-        from ftcKeys import USERNAME, PASSWORD

@@ -32,8 +32,8 @@ def main(programSelection):
     print("Finished sorting and saving teams!")
 
 # FLL
-# main(PROGRAM_TYPES[0])
+main(PROGRAM_TYPES[0])
 # FRC
-# main(PROGRAM_TYPES[1])
+#main(PROGRAM_TYPES[1])
 # FTC
-main(PROGRAM_TYPES[2])
+#main(PROGRAM_TYPES[2])

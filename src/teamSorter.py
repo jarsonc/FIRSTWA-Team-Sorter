@@ -28,20 +28,24 @@ def main(programSelection):
         print("Sorting FTC teams and events")
         eventsAvailable = importFTCEvents()
         teamsWithEventDistances = parseFTCTeams(eventsAvailable, programSelection)
-    oldSort(teamsWithEventDistances, eventsAvailable, programSelection)
+    sortAndSave(teamsWithEventDistances, eventsAvailable, programSelection)
     
-def oldSort(teamsWithEventDistances, eventsAvailable, programSelection):
-    eventsWithSortedTeams = createEventKeysWithTeams(eventsAvailable, teamsWithEventDistances)
+def sortAndSave(teamsWithEventDistances, eventsAvailable, programSelection):
     eventsWithTeamList = sortTeams(teamsWithEventDistances, eventsAvailable)
-    
     if checkAlreadySorted(programSelection):
-        if promptForReSort():
-            convertDictToFile(eventsWithTeamList, GENERATED_LIST_FILE, programSelection)
-            print("Finished sorting and saving teams!")
-            print(printMetricData())
-        else:
+        if not promptForReSort():
             print("No action taken. Original sort preserved")
+    convertDictToFile(eventsWithTeamList, GENERATED_LIST_FILE, programSelection)
+    print("Finished sorting and saving teams!")
+    print(printMetricData())
+    #print(printAnomalies(teamsWithEventDistances))
 
+def printAnomalies(teamsWithEventDistances):
+    for team, distance in METRIC_DATA.get(FLAGGED_TEAMS):
+        print("Team: ", team, "flagged for distance: ", distance)
+        print("Assigned to: ", list(teamsWithEventDistances.get(team).keys())[list(teamsWithEventDistances.get(team).values()).index(distance)])
+        print(teamsWithEventDistances.get(team))
+    print(METRIC_DATA.get(FLAGGED_TEAMS))
 # FLL
 main(PROGRAM_TYPES[0])
 # FRC

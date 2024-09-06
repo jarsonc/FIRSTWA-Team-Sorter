@@ -72,9 +72,8 @@ def sortTeams(teamsWithEventDistances, eventsAvailable):
     eventsWithTeamList = {}
     preference = {}
     for team in teamsWithEventDistances:
-        nthChoiceEvent = 1
         sortedEventList = OrderedDict(sorted(teamsWithEventDistances.get(team).items(), key=lambda item: item[1]))
-        event, nthChoiceEvent = findEvent(sortedEventList, eventsWithTeamList, team, teamsWithEventDistances, eventsAvailable, preference, nthChoiceEvent)
+        event, nthChoiceEvent = findEvent(sortedEventList, eventsWithTeamList, team, teamsWithEventDistances, eventsAvailable, preference, 1)
         addPreferenceMetric(nthChoiceEvent, team, teamsWithEventDistances.get(team).get(event))
     return eventsWithTeamList
 
@@ -100,15 +99,13 @@ def findEvent(sortedEventList, eventsWithTeamList, team, teamsWithEventDistances
                 # If during the course of sorting, the event is full, we double check that there is no team farther away AND lower preferenced (i.e, if this is our 1st preference, we should get in over a 2nd preferenced team)
                 if assignedTeamDistance > currentTeamDistance and currentTeamPreference > assignedTeamPreference:
                     eventsWithTeamList.get(event).remove((assignedTeam, assignedTeamDistance))
-                    poppedValue = preference.pop(assignedTeam)
-                    print(assignedTeam, poppedValue)
+                    preference.pop(assignedTeam)
                     print("Reallocating: ", "{:<5}".format(team), " to ", event , "at distance", "{:.2f}".format(teamsWithEventDistances.get(team).get(event)))
                     eventsWithTeamList.get(event).append((team, currentTeamDistance))
                     preference[team] = currentTeamPreference
                     print("Rerunning sort for removed team: ", assignedTeam)
-                    event, nthChoiceEvent = findEvent(sortedEventList, eventsWithTeamList, assignedTeam, teamsWithEventDistances, eventsAvailable, preference, assignedTeamPreference)
-                    addPreferenceMetric(nthChoiceEvent, team, currentTeamDistance)
-                    break
+                    event, nthChoiceEvent = findEvent(sortedEventList, eventsWithTeamList, assignedTeam, teamsWithEventDistances, eventsAvailable, preference, 1)
+                    return event, nthChoiceEvent
             nthChoiceEvent += 1
     return event, nthChoiceEvent
 
@@ -118,16 +115,9 @@ def addPreferenceMetric(nthChoiceEvent, team, distance):
     elif nthChoiceEvent == 2:
         METRIC_DATA[SECOND_CHOICE_EVENT_TEAMS].append(team)
     elif nthChoiceEvent >= 3 and distance > DISTANCE_TO_FLAG:
-        METRIC_DATA[FLAGGED_TEAMS].append(team)
+        METRIC_DATA[FLAGGED_TEAMS].append((team, distance))
     else:
         METRIC_DATA[WEIRD_TEAMS].append(team)
-
-def attemptToBump(team, eventsWithTeamList, sortedEventList):
-    print(team)
-    print(sortedEventList)
-    print(eventsWithTeamList)
-    emptyPrompt()
-
 
 def createEventKeysWithTeams(eventsAvailable, teamsWithEventDistances):
     eventsWithSortedTeams = {}

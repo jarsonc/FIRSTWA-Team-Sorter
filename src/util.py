@@ -74,7 +74,7 @@ def sortTeams(teamsWithEventDistances, eventsAvailable):
     for team in teamsWithEventDistances:
         sortedEventList = OrderedDict(sorted(teamsWithEventDistances.get(team).items(), key=lambda item: item[1]))
         event, nthChoiceEvent = findEvent(sortedEventList, eventsWithTeamList, team, teamsWithEventDistances, eventsAvailable, preference, 1)
-        addPreferenceMetric(nthChoiceEvent, team, teamsWithEventDistances.get(team).get(event))
+        addPreferenceMetric(nthChoiceEvent, team, teamsWithEventDistances.get(team).get(event), teamsWithEventDistances.get(team))
     return eventsWithTeamList
 
 def findEvent(sortedEventList, eventsWithTeamList, team, teamsWithEventDistances, eventsAvailable, preference, nthChoiceEvent):
@@ -104,17 +104,22 @@ def findEvent(sortedEventList, eventsWithTeamList, team, teamsWithEventDistances
                     eventsWithTeamList.get(event).append((team, currentTeamDistance))
                     preference[team] = currentTeamPreference
                     print("Rerunning sort for removed team: ", assignedTeam)
+                    if team == 63188 or assignedTeam == 63188:
+                        emptyPrompt()
                     event, nthChoiceEvent = findEvent(sortedEventList, eventsWithTeamList, assignedTeam, teamsWithEventDistances, eventsAvailable, preference, 1)
                     return event, nthChoiceEvent
             nthChoiceEvent += 1
     return event, nthChoiceEvent
 
-def addPreferenceMetric(nthChoiceEvent, team, distance):
+def addPreferenceMetric(nthChoiceEvent, team, distance, allEventDistances):
     if nthChoiceEvent == 1:
         METRIC_DATA[FIRST_CHOICE_EVENT_TEAMS].append(team)
     elif nthChoiceEvent == 2:
         METRIC_DATA[SECOND_CHOICE_EVENT_TEAMS].append(team)
     elif nthChoiceEvent >= 3 and distance > DISTANCE_TO_FLAG:
+        print("Flagging team: ", team, "with distance: ", distance, " which is their nth choice: ", nthChoiceEvent)
+        print(allEventDistances)
+        emptyPrompt()
         METRIC_DATA[FLAGGED_TEAMS].append((team, distance))
     else:
         METRIC_DATA[WEIRD_TEAMS].append(team)

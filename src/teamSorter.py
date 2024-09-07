@@ -37,8 +37,8 @@ def sortAndSave(teamsWithEventDistances, eventsAvailable, programSelection):
             print("No action taken. Original sort preserved")
     convertDictToFile(eventsWithTeamList, GENERATED_LIST_FILE, programSelection)
     print("Finished sorting and saving teams!")
-    print(printMetricData())
-    #print(printAnomalies(teamsWithEventDistances))
+    #print(printMetricData())
+    print(printAnomalies(teamsWithEventDistances))
 
 def printAnomalies(teamsWithEventDistances):
     for team, distance in METRIC_DATA.get(FLAGGED_TEAMS):

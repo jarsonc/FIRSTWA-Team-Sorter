@@ -16,7 +16,7 @@ def getNumEvents():
     numEvents = json.loads(r.read().decode('utf-8')).get("hits").get("total").get("value")
     return numEvents
 
-def importFLLTeams():
+def importFLLTeams(programSelection):
     print("Fetching team data from FIRST API")
     r = urllib.request.urlopen(FIRST_WA_TEAMS_URL.format(numTeams = getNumTeams()) + FIRST_WA_TEAMS_POSTFIX)
     completeTeamData = json.loads(r.read().decode('utf-8')).get("hits").get("hits")
@@ -24,6 +24,7 @@ def importFLLTeams():
     for team in completeTeamData:
         teamData = team.get("_source")
         teamsToSort[teamData.get("team_number_yearly")] = teamData
+    convertDictToFile(teamsToSort, GENERATED_TEAMS_FILE, programSelection)
     return teamsToSort
 
 def importFLLEvents(programSelection):
@@ -47,8 +48,7 @@ def importFLLEvents(programSelection):
     convertDictToFile(eventsToSort, GENERATED_EVENT_FILE, programSelection)
     return eventsToSort
 
-def parseFLLTeams(eventsAvailable, programSelection):
-    teamsToSort = importFLLTeams()
+def parseFLLTeams(teamsToSort, eventsAvailable, programSelection):
     totalSpots = 0
     for event in eventsAvailable:
         totalSpots += eventsAvailable.get(event).get(CUSTOM_CAPACITY_TYPE)
@@ -61,5 +61,5 @@ def parseFLLTeams(eventsAvailable, programSelection):
         teamsWithEventDistances[team] = dict(sorted(findDistanceByPostalCode(teamsToSort.get(team), eventsAvailable).items(), key=lambda item: item[1]))
         print("Team: ",  "{:<5}".format(team), " | ", number, " out of: ", len(teamsToSort.keys()))
         number += 1
-    convertDictToFile(teamsWithEventDistances, GENERATED_TEAMS_WITH_DISTANCES_FILE, programSelection)
+    convertDictToFile(teamsWithEventDistances, GENERATED_TEAMS_WITH_ALL_EVENT_DISTANCES, programSelection)
     return teamsWithEventDistances

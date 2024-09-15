@@ -19,7 +19,14 @@ FIRST_WA_EVENTS_POSTFIX = "&from=0&source_content_type=application/json&source={
 GENERATED_EVENT_FILE = "events.csv"
 GENERATED_FILE_PATH_ROOT = "./generatedFiles/"
 GENERATED_LIST_FILE = "eventsWithTeamList.csv"
-GENERATED_TEAMS_WITH_DISTANCES_FILE = "teamsWithEventDistances.csv"
+GENERATED_TEAMS_FILE = "INPUT_teamData.csv"
+GENERATED_TEAMS_WITH_ALL_EVENT_DISTANCES = "GENERATED_teamsWithAllEventDistances.csv"
+
 
 FTC_EVENTS_URL = "http://ftc-api.firstinspires.org/v2.0/{season:n}/events"
 FTC_TEAMS_URL = "http://ftc-api.firstinspires.org/v2.0/{season}/teams"
+
+PANDAS_EVENT_DATAFRAME_COLUMN_TITLE = "Assigned Event"
+PANDAS_LAT_DATAFRAME_COLUMN_TITLE = "Latitude"
+PANDAS_LON_DATAFRAME_COLUMN_TITLE = "Longitude"
+PANDAS_TEAM_DATAFRAME_COLUMN_TITLE = "Team Number"

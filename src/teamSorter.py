@@ -1,6 +1,7 @@
 from constants import *
 from getFLLInfo import *
 from getFTCInfo import *
+from sortingAlgs import sortTeams
 from util import *
 
 import sys
@@ -13,42 +14,35 @@ def main(programSelection):
             if promptForRerun():
                 print("Historical data exists, using existing data instead of reimport")
                 eventsAvailable = importExistingEventsFile(programSelection)
-                teamsWithEventDistances = importExistingTeamsFile(programSelection)
+                allTeams = importExistingTeamsFile(programSelection)
+                teamsWithAllEventDistances = importExistingTeamsWithAllEventDistancesFile(programSelection)
             else:
                 print("Scraping teams and events")
                 eventsAvailable = importFLLEvents(programSelection)
-                teamsWithEventDistances = parseFLLTeams(eventsAvailable, programSelection)
+                allTeams = importFLLTeams(programSelection)
+                teamsWithAllEventDistances = parseFLLTeams(allTeams, eventsAvailable, programSelection)
         else:
             eventsAvailable = importFLLEvents(programSelection)
-            teamsWithEventDistances = parseFLLTeams(eventsAvailable, programSelection)
+            allTeams = importFLLTeams(programSelection)
+            teamsWithAllEventDistances = parseFLLTeams(allTeams, eventsAvailable, programSelection)
     elif programSelection is FRC:
         print("FRC not currently supported (and/or needed)")
         return
     elif programSelection is FTC:
         print("Sorting FTC teams and events")
         eventsAvailable = importFTCEvents()
-        teamsWithEventDistances = parseFTCTeams(eventsAvailable, programSelection)
-    sortAndSave(teamsWithEventDistances, eventsAvailable, programSelection)
+        teamsWithAllEventDistances = parseFTCTeams(eventsAvailable, programSelection)
+    sortAndSave(teamsWithAllEventDistances, eventsAvailable, programSelection, allTeams)
     
-def sortAndSave(teamsWithEventDistances, eventsAvailable, programSelection):
+def sortAndSave(teamsWithEventDistances, eventsAvailable, programSelection, allTeams):
     eventsWithTeamList = sortTeams(teamsWithEventDistances, eventsAvailable)
     if checkAlreadySorted(programSelection):
         if not promptForReSort():
             print("No action taken. Original sort preserved")
     convertDictToFile(eventsWithTeamList, GENERATED_LIST_FILE, programSelection)
     print("Finished sorting and saving teams!")
-    #print(printMetricData())
-    print(printAnomalies(teamsWithEventDistances))
+    print(printMetricData())
+    generateMap(eventsWithTeamList, allTeams)
 
-def printAnomalies(teamsWithEventDistances):
-    for team, distance in METRIC_DATA.get(FLAGGED_TEAMS):
-        print("Team: ", team, "flagged for distance: ", distance)
-        print("Assigned to: ", list(teamsWithEventDistances.get(team).keys())[list(teamsWithEventDistances.get(team).values()).index(distance)])
-        print(teamsWithEventDistances.get(team))
-    print(METRIC_DATA.get(FLAGGED_TEAMS))
 # FLL
 main(PROGRAM_TYPES[0])
-# FRC
-#main(PROGRAM_TYPES[1])
-# FTC
-#main(PROGRAM_TYPES[2])

@@ -34,7 +34,7 @@ def findEvent(sortedEventList, eventsWithTeamList, team, teamsWithEventDistances
                 currentTeamPreference = list(sortedEventList.keys()).index(event)
                 assignedTeamPreference = preference[assignedTeam]
                 # If during the course of sorting, the event is full, we double check that there is no team farther away AND lower preferenced (i.e, if this is our 1st preference, we should get in over a 2nd preferenced team)
-                if assignedTeamDistance > currentTeamDistance and currentTeamPreference > assignedTeamPreference:
+                if assignedTeamDistance > currentTeamDistance and currentTeamPreference < assignedTeamPreference:
                     eventsWithTeamList.get(event).remove((assignedTeam, assignedTeamDistance))
                     preference.pop(assignedTeam)
                     print("Reallocating: ", "{:<5}".format(team), " to ", event , "at distance", "{:.2f}".format(teamsWithEventDistances.get(team).get(event)))

@@ -37,7 +37,7 @@ def importFLLEvents(programSelection):
         eventName = eventData.get("event_name").strip()
         if (eventData.get("event_subtype") == QUALIFYING_EVENT_SUBTYPE):
             if CUSTOM_CAPACITY_TYPE not in event.keys():
-                eventData["event_capacity"] = DEFAULT_CAPACITY
+                eventData["event_capacity"] = promptForCapacity(event)
             for dateName in WEEKEND_DAYS:
                 eventName = eventName.replace(dateName, '')
             if eventName in eventsToSort:

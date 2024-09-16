@@ -1,3 +1,4 @@
+import math
 from operator import itemgetter
 from constants import *
 
@@ -32,6 +33,10 @@ def importExistingEventsFile(programSelection):
     filePath = GENERATED_FILE_PATH_ROOT + programSelection + "/" + GENERATED_EVENT_FILE
     df = pd.read_csv(filePath, index_col=0)
     existingSort = df.to_dict('index')
+    for event in existingSort:
+        capacity = existingSort.get(event).get(CUSTOM_CAPACITY_TYPE)
+        if math.isnan(capacity):
+            existingSort[event][CUSTOM_CAPACITY_TYPE] = promptForCapacity(event)
     return existingSort
 
 def importExistingTeamsFile(programSelection):
@@ -96,6 +101,18 @@ def promptForRerun():
 def promptForReSort():
     inputPrompt = "Existing sort found. Re-allocate events? (Y/N) \n NOTE: This will override any existing sorts unless the file is backed up)"
     return "y" in input(inputPrompt).lower()
+
+def promptForCapacity(event):
+    inputPrompt = "No capacity found for event: " + event + "\nEnter capacity desired: "
+    while True:
+        try:
+            capcity = int(input(inputPrompt))
+        except ValueError:
+            print("Invalid capacity entered. Please enter a whole number.")
+            continue
+        else:
+            break
+    return capcity
 
 def emptyPrompt():
     input("Press Enter to continue...")

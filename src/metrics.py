@@ -68,7 +68,6 @@ def generateMap(eventsWithTeamList, allTeams):
              markersize=10, legend=True, legend_kwds={'loc': 'best'})
     cx.add_basemap(ax)
     plt.show()
-    emptyPrompt()
     return df
 
 def guessLocation(allTeams, team):

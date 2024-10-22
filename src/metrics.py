@@ -47,7 +47,7 @@ def printAnomalies(teamsWithEventDistances):
         print(teamsWithEventDistances.get(team))
     print(METRIC_DATA.get(FLAGGED_TEAMS))
 
-def generateMap(eventsWithTeamList, allTeams):
+def generateMap(eventsWithTeamList, allTeams, allTeamData):
     allTeamLocations = []
     teamEventPairs = {}
     for event in eventsWithTeamList:
@@ -55,11 +55,11 @@ def generateMap(eventsWithTeamList, allTeams):
         for team in teamList:
             teamEventPairs[team[0]] = event
     for team in allTeams:
-        teamLatLon = literal_eval(allTeams.get(team).get('location'))[0]
+        teamLatLon = allTeamData.get(team).get('location')[0]
         if teamLatLon == DEFAULT_LAT_LON:
-            teamLatLon = guessLocation(allTeams, team)
+            teamLatLon = guessLocation(allTeamData, team)
         assignedEvent = teamEventPairs[team]
-        teamLocation = (team, teamLatLon.get("lat"), teamLatLon.get("lon"), assignedEvent)
+        teamLocation = (team, float(teamLatLon.get("lat")), float(teamLatLon.get("lon")), assignedEvent)
         allTeamLocations.append(teamLocation)
     df = pd.DataFrame(allTeamLocations, columns=[PANDAS_TEAM_DATAFRAME_COLUMN_TITLE, PANDAS_LAT_DATAFRAME_COLUMN_TITLE, PANDAS_LON_DATAFRAME_COLUMN_TITLE, PANDAS_EVENT_DATAFRAME_COLUMN_TITLE])
     gdf = geopandas.GeoDataFrame(df, geometry=geopandas.points_from_xy(df.Longitude, df.Latitude), crs="EPSG:4326")
@@ -72,7 +72,10 @@ def generateMap(eventsWithTeamList, allTeams):
 
 def guessLocation(allTeams, team):
     nomi = pgeocode.Nominatim('us')
-    query = nomi.query_postal_code(allTeams.get(team).get('team_postalcode'))
+    if allTeams.get(team).get('team_postalcode') == "98705": #Known bugged zip code in FIRST's system
+        query = nomi.query_postal_code("98075")
+    else:
+        query = nomi.query_postal_code(allTeams.get(team).get('team_postalcode'))
     teamLatLon = {
         "lat": query["latitude"],
         "lon": query["longitude"]

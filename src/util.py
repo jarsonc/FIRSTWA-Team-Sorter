@@ -8,6 +8,8 @@ import pgeocode
 
 from metrics import *
 
+HAS_REGISTERED_ADDED_FIELD = "Registered With FIRSTWA"
+
 def convertDictToFile(inputDict, desiredFileName, programSelection):
     filePath = GENERATED_FILE_PATH_ROOT + programSelection + "/"
     if not os.path.exists(filePath):
@@ -17,8 +19,7 @@ def convertDictToFile(inputDict, desiredFileName, programSelection):
 
 def checkDataExists(programSelection):
     eventFilePath = GENERATED_FILE_PATH_ROOT + programSelection + "/" + GENERATED_EVENT_FILE
-    teamFilePath = GENERATED_FILE_PATH_ROOT + programSelection + "/" + GENERATED_TEAMS_WITH_ALL_EVENT_DISTANCES
-    if os.path.exists(eventFilePath) and os.path.exists(teamFilePath):
+    if os.path.exists(eventFilePath):
         return True
     return False
 
@@ -27,6 +28,12 @@ def checkAlreadySorted(programSelection):
     if os.path.exists(sortFilePath):
         return True
     return False
+
+def importExistingSort(programSelection):
+    filePath = GENERATED_FILE_PATH_ROOT + programSelection + "/" + GENERATED_LIST_FILE
+    df = pd.read_csv(filePath, index_col=0)
+    existingSort = df.to_dict('index')
+    return existingSort
 
 
 def importExistingEventsFile(programSelection):
@@ -39,21 +46,36 @@ def importExistingEventsFile(programSelection):
             existingSort[event][CUSTOM_CAPACITY_TYPE] = promptForCapacity(event)
     return existingSort
 
-def importExistingTeamsFile(programSelection):
-    filePath = GENERATED_FILE_PATH_ROOT + programSelection + "/" + GENERATED_TEAMS_FILE
+def importExistingWebsiteTeamsFile(programSelection):
+    filePath = GENERATED_FILE_PATH_ROOT + programSelection + "/" + GENERATED_TEAMS_FROM_WEBSITE_FILE
+    df = pd.read_csv(filePath, index_col=0)
+    print(df)
+    existingSort = df.to_dict('index')
+    return existingSort
+
+def importExistingManualTeamsFile(programSelection):
+    filePath = GENERATED_FILE_PATH_ROOT + programSelection + "/" + GENERATED_TEAMS_FROM_MANUAL_FILE
     df = pd.read_csv(filePath, index_col=0)
     existingSort = df.to_dict('index')
     return existingSort
 
-def importExistingTeamsWithAllEventDistancesFile(programSelection):
-    filePath = GENERATED_FILE_PATH_ROOT + programSelection + "/" + GENERATED_TEAMS_WITH_ALL_EVENT_DISTANCES
+
+def importExistingWebsiteTeamsWithAllEventDistancesFile(programSelection):
+    filePath = GENERATED_FILE_PATH_ROOT + programSelection + "/" + GENERATED_WEBSITE_TEAMS_WITH_ALL_EVENT_DISTANCES
     df = pd.read_csv(filePath, index_col=0)
     existingSort = df.to_dict('index')
     return existingSort
 
-def findDistanceByPostalCode(team, eventsAvailable):
+def importExistingManualTeamsWithAllEventDistancesFile(programSelection):
+    filePath = GENERATED_FILE_PATH_ROOT + programSelection + "/" + GENERATED_MANUAL_TEAMS_WITH_ALL_EVENT_DISTANCES
+    df = pd.read_csv(filePath, index_col=0)
+    existingSort = df.to_dict('index')
+    return existingSort
+
+
+def findDistanceByPostalCode(team, eventsAvailable, websiteInput):
     distanceUtility = pgeocode.GeoDistance('us')
-    teamPostalCode = team.get(TEAM_POSTAL_CODE_DATATYPE)
+    teamPostalCode = team.get(TEAM_POSTAL_CODE_DATATYPE if websiteInput else TEAM_POSTAL_CODE_DATATYPE_MANUAL_INPUT)
     eventsAndDistances = {}
     for event in eventsAvailable:
         eventPostalCode = eventsAvailable.get(event).get(EVENT_POSTAL_CODE_DATATYPE)
@@ -102,8 +124,9 @@ def promptForReSort():
     inputPrompt = "Existing sort found. Re-allocate events? (Y/N) \n NOTE: This will override any existing sorts unless the file is backed up)"
     return "y" in input(inputPrompt).lower()
 
-def promptForCapacity(event):
-    inputPrompt = "No capacity found for event: " + event + "\nEnter capacity desired: "
+def promptForCapacity(eventName):
+    """
+    inputPrompt = "No capacity found for event: " + eventName + "\nEnter capacity desired: "
     while True:
         try:
             capcity = int(input(inputPrompt))
@@ -113,6 +136,56 @@ def promptForCapacity(event):
         else:
             break
     return capcity
+    """
+    return 25
 
 def emptyPrompt():
     input("Press Enter to continue...")
+
+def promptForInputSource():
+    inputPrompt = "Would you like to use FIRST's API data, or upload a file? Enter 'y' for API data, anything else for upload."
+    return "y" in input(inputPrompt).lower()
+
+def getTeamsFromInput(programSelection):
+    # This logic currently adds a column labeled "HAS_REGISTERED_ADDED_FIELD", which marks if they've paid
+    # We want to eventually add preference logic. For initial run, we'll just sort paid teams
+    #
+    # filePath = validateFilePath()
+    # allTeams = pd.read_excel(filePath, sheet_name=0)
+    # allTeams.set_index('Team Number', drop=False, inplace=True)
+    # allTeams[HAS_REGISTERED_ADDED_FIELD]=0
+    # registeredTeams = pd.read_excel(filePath, sheet_name=1, header=None).iloc[:, 0]
+    # for team in registeredTeams:
+    #     allTeams.loc[allTeams['Team Number'] == team, HAS_REGISTERED_ADDED_FIELD] = 1
+    # convertedDict = allTeams.to_dict('index')
+    # convertDictToFile(convertedDict, GENERATED_TEAMS_FROM_MANUAL_FILE, programSelection)
+    # return convertedDict
+    filePath = validateFilePath()
+    allTeams = pd.read_excel(filePath, sheet_name=0)
+    allTeams.set_index('Team Number', drop=False, inplace=True)
+    allTeams[HAS_REGISTERED_ADDED_FIELD]=0
+    registeredTeams = pd.read_excel(filePath, sheet_name=1, header=None).iloc[:, 0]
+    teamsToSort = {}
+    for team in registeredTeams:
+        teamsToSort.update(allTeams.loc[allTeams['Team Number'] == team].to_dict('index'))
+    convertDictToFile(teamsToSort, GENERATED_TEAMS_FROM_MANUAL_FILE, programSelection)
+    return teamsToSort
+
+
+def validateFilePath():
+    """
+    inputPrompt = "Enter existing file path: "
+    while True:
+        try:
+            filePath = input(inputPrompt)
+            print("Entered: ", filePath)
+            if os.path.isfile(filePath):
+                return filePath
+            else:
+                print("Invalid path entered. Try again")
+                continue
+        except:
+            break
+    """
+    return "/Users/jasoncheng/Desktop/FLL_Team_Sorter/src/List for Jason.xlsx"
+    

@@ -10,21 +10,45 @@ def main(programSelection):
     sys.tracebacklimit = 0
     if programSelection is FLL_CHALLENGE:
         print("Sorting FLL teams and events")
-        if checkDataExists(programSelection):
-            if promptForRerun():
-                print("Historical data exists, using existing data instead of reimport")
-                eventsAvailable = importExistingEventsFile(programSelection)
-                allTeams = importExistingTeamsFile(programSelection)
-                teamsWithAllEventDistances = importExistingTeamsWithAllEventDistancesFile(programSelection)
+        if promptForInputSource():
+            isManual = False
+            if checkDataExists(programSelection):
+                if promptForRerun():
+                    print("Historical data exists, using existing data instead of reimport")
+                    eventsAvailable = importExistingEventsFile(programSelection)
+                    allTeams = importExistingWebsiteTeamsFile(programSelection)
+                    teamsWithAllEventDistances = importExistingWebsiteTeamsWithAllEventDistancesFile(programSelection)
+                else:
+                    print("Scraping teams and events")
+                    eventsAvailable = importFLLEvents(programSelection)
+                    allTeams = importFLLTeams(programSelection)
+                    teamsWithAllEventDistances = parseFLLTeams(allTeams, eventsAvailable, programSelection, True)
             else:
-                print("Scraping teams and events")
-                eventsAvailable = importFLLEvents(programSelection)
-                allTeams = importFLLTeams(programSelection)
-                teamsWithAllEventDistances = parseFLLTeams(allTeams, eventsAvailable, programSelection)
+                    print("Scraping teams and events")
+                    eventsAvailable = importFLLEvents(programSelection)
+                    allTeams = importFLLTeams(programSelection)
+                    teamsWithAllEventDistances = parseFLLTeams(allTeams, eventsAvailable, programSelection, True)
         else:
-            eventsAvailable = importFLLEvents(programSelection)
-            allTeams = importFLLTeams(programSelection)
-            teamsWithAllEventDistances = parseFLLTeams(allTeams, eventsAvailable, programSelection)
+            isManual = True
+            if checkDataExists(programSelection):
+                if promptForRerun():
+                    print("Historical data exists, using existing data instead of reimport")
+                    eventsAvailable = importExistingEventsFile(programSelection)
+                    allTeams = importExistingManualTeamsFile(programSelection)
+                    teamsWithAllEventDistances = importExistingManualTeamsWithAllEventDistancesFile(programSelection)
+                else:
+                    print("Scraping events - Current expected file does NOT have event data.")
+                    eventsAvailable = importFLLEvents(programSelection)
+                    print("Please select a file for team selection")
+                    allTeams = getTeamsFromInput(programSelection)
+                    teamsWithAllEventDistances = parseFLLTeams(allTeams, eventsAvailable, programSelection, False)
+            else:
+                print("Scraping events - Current expected file does NOT have event data.")
+                eventsAvailable = importFLLEvents(programSelection)
+                print("Please select a file for team selection")
+                allTeams = getTeamsFromInput(programSelection)
+                teamsWithAllEventDistances = parseFLLTeams(allTeams, eventsAvailable, programSelection, False)
+
     elif programSelection is FRC:
         print("FRC not currently supported (and/or needed)")
         return
@@ -32,17 +56,22 @@ def main(programSelection):
         print("Sorting FTC teams and events")
         eventsAvailable = importFTCEvents()
         teamsWithAllEventDistances = parseFTCTeams(eventsAvailable, programSelection)
-    sortAndSave(teamsWithAllEventDistances, eventsAvailable, programSelection, allTeams)
+    sortAndSave(teamsWithAllEventDistances, eventsAvailable, programSelection, allTeams, isManual)
     
-def sortAndSave(teamsWithEventDistances, eventsAvailable, programSelection, allTeams):
+def sortAndSave(teamsWithEventDistances, eventsAvailable, programSelection, allTeams, isManual):
     eventsWithTeamList = sortTeams(teamsWithEventDistances, eventsAvailable)
     if checkAlreadySorted(programSelection):
         if not promptForReSort():
             print("No action taken. Original sort preserved")
     convertDictToFile(eventsWithTeamList, GENERATED_LIST_FILE, programSelection)
     print("Finished sorting and saving teams!")
-    print(printMetricData())
-    generateMap(eventsWithTeamList, allTeams)
+    printMetricData()
+    if isManual:
+        print("Manual search does NOT have location field. Scraping FIRST website")
+        allTeamData = importFLLTeams(PROGRAM_TYPES[0])
+        generateMap(eventsWithTeamList, allTeams, allTeamData)
+    else:
+        generateMap(eventsWithTeamList, allTeams, allTeams)
 
 # FLL
 main(PROGRAM_TYPES[0])

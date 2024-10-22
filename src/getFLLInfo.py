@@ -1,3 +1,4 @@
+import re
 from constants import *
 from util import *
 
@@ -24,7 +25,7 @@ def importFLLTeams(programSelection):
     for team in completeTeamData:
         teamData = team.get("_source")
         teamsToSort[teamData.get("team_number_yearly")] = teamData
-    convertDictToFile(teamsToSort, GENERATED_TEAMS_FILE, programSelection)
+    convertDictToFile(teamsToSort, GENERATED_TEAMS_FROM_WEBSITE_FILE, programSelection)
     return teamsToSort
 
 def importFLLEvents(programSelection):
@@ -34,10 +35,10 @@ def importFLLEvents(programSelection):
     eventsToSort = {}
     for event in completeEventData:
         eventData = event.get("_source")
-        eventName = eventData.get("event_name").strip()
+        eventName = re.sub(r'\d+', '', eventData.get("event_name").strip())
         if (eventData.get("event_subtype") == QUALIFYING_EVENT_SUBTYPE):
             if CUSTOM_CAPACITY_TYPE not in event.keys():
-                eventData["event_capacity"] = promptForCapacity(event)
+                eventData["event_capacity"] = promptForCapacity(eventName)
             for dateName in WEEKEND_DAYS:
                 eventName = eventName.replace(dateName, '')
             if eventName in eventsToSort:
@@ -48,18 +49,19 @@ def importFLLEvents(programSelection):
     convertDictToFile(eventsToSort, GENERATED_EVENT_FILE, programSelection)
     return eventsToSort
 
-def parseFLLTeams(teamsToSort, eventsAvailable, programSelection):
+def parseFLLTeams(teamsToSort, eventsAvailable, programSelection, websiteInput):
     totalSpots = 0
     for event in eventsAvailable:
         totalSpots += eventsAvailable.get(event).get(CUSTOM_CAPACITY_TYPE)
-    print("Assigning ", len(teamsToSort), " to ", len(eventsAvailable), " events with ", totalSpots, " spots")
+    print("Assigning ", len(teamsToSort), " teams to ", len(eventsAvailable), " events (with multi day events combined) with ", totalSpots, " spots")
     if len(teamsToSort) > totalSpots:
         raise Exception("Not enough event spots for teams")
     teamsWithEventDistances = {}
     number = 1
     for team in teamsToSort:
-        teamsWithEventDistances[team] = dict(sorted(findDistanceByPostalCode(teamsToSort.get(team), eventsAvailable).items(), key=lambda item: item[1]))
+        teamsWithEventDistances[team] = dict(sorted(findDistanceByPostalCode(teamsToSort.get(team), eventsAvailable, websiteInput).items(), key=lambda item: item[1]))
         print("Team: ",  "{:<5}".format(team), " | ", number, " out of: ", len(teamsToSort.keys()))
         number += 1
-    convertDictToFile(teamsWithEventDistances, GENERATED_TEAMS_WITH_ALL_EVENT_DISTANCES, programSelection)
+    convertDictToFile(teamsWithEventDistances, GENERATED_WEBSITE_TEAMS_WITH_ALL_EVENT_DISTANCES if websiteInput else GENERATED_MANUAL_TEAMS_WITH_ALL_EVENT_DISTANCES, programSelection)
+    print("Finished sorting and saving")
     return teamsWithEventDistances

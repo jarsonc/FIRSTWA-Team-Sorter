@@ -21,12 +21,13 @@ FIRST_WA_EVENTS_POSTFIX = "&from=0&source_content_type=application/json&source={
 GENERATED_EVENT_FILE = "events.csv"
 GENERATED_FILE_PATH_ROOT = "./generatedFiles/"
 GENERATED_LIST_FILE = "OUTPUT_eventsWithTeamList.csv"
+GENERATED_TEAM_OUTPUT_WITH_EVENTS = "OUTPUT_modifiedTeamListWithEventAssignment.csv"
 GENERATED_TEAMS_FROM_WEBSITE_FILE = "INPUT_website_teamData.csv"
 GENERATED_TEAMS_FROM_MANUAL_FILE = "INPUT_manual_teamData.csv"
 GENERATED_WEBSITE_TEAMS_WITH_ALL_EVENT_DISTANCES = "GENERATED_website_teamsWithAllEventDistances.csv"
 GENERATED_MANUAL_TEAMS_WITH_ALL_EVENT_DISTANCES = "GENERATED_manual_teamsWithAllEventDistances.csv"
 
-
+ASSINGNED_EVENT_FIELD = "Assigned Event"
 
 FTC_EVENTS_URL = "http://ftc-api.firstinspires.org/v2.0/{season:n}/events"
 FTC_TEAMS_URL = "http://ftc-api.firstinspires.org/v2.0/{season}/teams"

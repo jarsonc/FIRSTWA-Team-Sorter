@@ -63,7 +63,12 @@ def sortAndSave(teamsWithEventDistances, eventsAvailable, programSelection, allT
     if checkAlreadySorted(programSelection):
         if not promptForReSort():
             print("No action taken. Original sort preserved")
+    for event in eventsWithTeamList:
+        for team, distance in eventsWithTeamList[event]:
+            allTeams[team][ASSINGNED_EVENT_FIELD] = event
+            print(allTeams[team])
     convertDictToFile(eventsWithTeamList, GENERATED_LIST_FILE, programSelection)
+    convertDictToFile(allTeams, GENERATED_TEAM_OUTPUT_WITH_EVENTS, programSelection)
     print("Finished sorting and saving teams!")
     printMetricData()
     if isManual:

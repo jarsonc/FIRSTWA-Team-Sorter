@@ -3,7 +3,6 @@ from typing import OrderedDict
 
 from constants import CUSTOM_CAPACITY_TYPE
 from metrics import *
-from util import emptyPrompt
 
 def sortTeams(teamsWithEventDistances, eventsAvailable):
     eventsWithTeamList = {}

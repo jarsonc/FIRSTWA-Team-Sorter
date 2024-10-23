@@ -125,7 +125,6 @@ def promptForReSort():
     return "y" in input(inputPrompt).lower()
 
 def promptForCapacity(eventName):
-    """
     inputPrompt = "No capacity found for event: " + eventName + "\nEnter capacity desired: "
     while True:
         try:
@@ -136,8 +135,7 @@ def promptForCapacity(eventName):
         else:
             break
     return capcity
-    """
-    return 25
+    #return 25
 
 def emptyPrompt():
     input("Press Enter to continue...")
